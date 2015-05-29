@@ -1,10 +1,14 @@
 {
   "name": "metromatic",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Listen events on an object and report metrics to StatsD",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url" : "https://github.com/alltherooms/metromatic.git"
   },
   "author": "Juan Hoyos <juan.hoyosr@gmail.com>",
   "license": "MIT",
