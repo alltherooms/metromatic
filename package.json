@@ -1,0 +1,19 @@
+{
+  "name": "metromatic",
+  "version": "1.0.0",
+  "description": "Listen events on an object and report metrics to StatsD",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Juan Hoyos <juan.hoyosr@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^2.3.0",
+    "sinon": "^1.14.1",
+    "sinon-chai": "^2.7.0"
+  },
+  "dependencies": {
+    "lynx": "^0.2.0"
+  }
+}
