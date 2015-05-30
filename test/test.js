@@ -37,15 +37,14 @@ describe('Metromatic', function () {
         eventStop: 'bar'
       }]);
       var clock = sinon.useFakeTimers();
-
-      sinon.spy(metromatic, 'send');
+      var timing = sinon.spy(metromatic.statsd, 'timing');
 
       object.emit('foo');
       clock.tick(500);
       object.emit('bar');
 
-      expect(metromatic.send).to.have.been.calledOnce;
-      expect(metromatic.send).to.have.been.calledWithExactly('timing', 'time_foo_bar', 500);
+      expect(timing).to.have.been.calledOnce;
+      expect(timing).to.have.been.calledWithExactly('time_foo_bar', 500);
 
       clock.restore();
     });

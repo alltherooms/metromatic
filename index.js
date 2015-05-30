@@ -38,7 +38,7 @@ function Metromatic (object, options) {
 */
 Metromatic.prototype.send = function (type, name, data) {
   var args = [name].concat(data);
-  this.statsd[type].call(this.statsd, args);
+  this.statsd[type].apply(this.statsd, args);
 };
 
 /*
