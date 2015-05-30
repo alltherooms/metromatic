@@ -1,6 +1,6 @@
 {
   "name": "metromatic",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Listen events on an object and report metrics to StatsD",
   "main": "index.js",
   "scripts": {
