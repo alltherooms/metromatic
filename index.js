@@ -2,7 +2,9 @@
 
 var lynx = require('lynx');
 
-function Metromatic (object, options) {
+function Metromatic () {}
+
+Metromatic.instrument = function (object, options) {
   var self = this;
   var statsd = options.statsd;
   var metrics = options.metrics || [];
@@ -30,9 +32,8 @@ function Metromatic (object, options) {
   });
 
   this.statsd = new lynx(statsd.host, statsd.port);
-  this.object = object;
-  this.metrics = metrics;
-}
+  object.metrics = metrics;
+};
 
 /*
 * Send a metric to StatsD
@@ -41,24 +42,24 @@ function Metromatic (object, options) {
 * @param {string} name - The metric name
 * @param {*} data - Whatever payload data the metric requires
 */
-Metromatic.prototype.send = function (type, name, data) {
+Metromatic.send = function (type, name, data) {
   var args = [name].concat(data);
   this.statsd[type].apply(this.statsd, args);
 };
 
 /*
 * Restores the object back to its original form by
-* removing all attached event listeners from the object.
+* removing all attached values and event listeners from the object.
 */
-Metromatic.prototype.restore = function () {
-  var self = this;
-
-  this.metrics.forEach(function (metric) {
+Metromatic.restore = function (object) {
+  object.metrics.forEach(function (metric) {
     if (metric.type === 'timing') {
-      self.object.removeAllListeners(metric.eventStart);
-      self.object.removeAllListeners(metric.eventStop);
+      object.removeAllListeners(metric.eventStart);
+      object.removeAllListeners(metric.eventStop);
     }
   });
+
+  delete object.metrics;
 };
 
 module.exports = Metromatic;

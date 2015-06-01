@@ -14,7 +14,7 @@ npm install metromatic
 
 ```
 var Metromatic = require('metromatic');
-var metromatic = new Metromatic(myAPIClient, {
+Metromatic.instrument(myAPIClient, {
   statsd: {
     host: 'localhost',
     port: 8125
@@ -33,7 +33,7 @@ Eventually, a timing StatsD metric will be send when `myAPIClient` emits the `re
 If you just want to stop listening the object:
 
 ```
-metromatic.restore();
+Metromatic.restore(myAPIClient);
 ```
 
 ## Running tests

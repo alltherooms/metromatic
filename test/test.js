@@ -21,7 +21,7 @@ describe('Metromatic', function () {
       metrics: metrics
     };
 
-    return new Metromatic(object, options);
+    Metromatic.instrument(object, options);
   }
 
   beforeEach(function () {
@@ -29,15 +29,23 @@ describe('Metromatic', function () {
   });
 
   describe('timed metrics', function () {
+    var clock;
+    var timing;
+
+    beforeEach(function () {
+      if (clock) clock.restore();
+      if (timing) timing.restore();
+    });
+
     it('reports a timed metric between the start and stop events', function () {
-      var metromatic = createMetromatic(object, [{
+      createMetromatic(object, [{
         name: 'time_foo_bar',
         type: 'timing',
         eventStart: 'foo',
         eventStop: 'bar'
       }]);
-      var clock = sinon.useFakeTimers();
-      var timing = sinon.spy(metromatic.statsd, 'timing');
+      clock = sinon.useFakeTimers();
+      timing = sinon.spy(Metromatic.statsd, 'timing');
 
       object.emit('foo');
       clock.tick(500);
@@ -45,19 +53,17 @@ describe('Metromatic', function () {
 
       expect(timing).to.have.been.calledOnce;
       expect(timing).to.have.been.calledWithExactly('time_foo_bar', 500);
-
-      clock.restore();
     });
 
     it('reports non-overlapping timed metrics', function () {
-      var metromatic = createMetromatic(object, [{
+      createMetromatic(object, [{
         name: 'time_foo_bar',
         type: 'timing',
         eventStart: 'foo',
         eventStop: 'bar'
       }]);
-      var clock = sinon.useFakeTimers();
-      var timing = sinon.spy(metromatic.statsd, 'timing');
+      clock = sinon.useFakeTimers();
+      timing = sinon.spy(Metromatic.statsd, 'timing');
 
       object.emit('foo', 'first-metric');
       clock.tick(500);
@@ -75,7 +81,7 @@ describe('Metromatic', function () {
 
   describe('wrapping and restore', function () {
     it('listens to specified events', function () {
-      var metromatic = createMetromatic(object, [{
+      createMetromatic(object, [{
         name: 'time_foo_bar',
         type: 'timing',
         eventStart: 'foo',
@@ -87,14 +93,14 @@ describe('Metromatic', function () {
     });
 
     it('stops listening events on the object', function () {
-      var metromatic = createMetromatic(object, [{
+      createMetromatic(object, [{
         name: 'time_foo_bar',
         type: 'timing',
         eventStart: 'foo',
         eventStop: 'bar'
       }]);
 
-      metromatic.restore();
+      Metromatic.restore(object);
 
       expect(object.listeners('foo')).have.length(0);
       expect(object.listeners('bar')).have.length(0);
