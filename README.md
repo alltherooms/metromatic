@@ -36,6 +36,8 @@ If you just want to stop listening the object:
 Metromatic.restore(myAPIClient);
 ```
 
+To keep track of multiple timings of the same event pass any id string as a parameter when emitting the events to differentiate them.
+
 ## Running tests
 
 Run the tests using
