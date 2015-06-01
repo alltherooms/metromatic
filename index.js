@@ -13,12 +13,17 @@ function Metromatic (object, options) {
 
   metrics.forEach(function (metric) {
     if (metric.type === 'timing') {
-      object.on(metric.eventStart, function () {
-        metric.startTime = new Date().getTime();
+      metric.events = metric.events || {};
+      object.on(metric.eventStart, function (id) {
+        id = id || '';
+        metric.events[id] = {
+          startTime: new Date().getTime()
+        };
       });
 
-      object.on(metric.eventStop, function () {
-        var elapsed = new Date().getTime() - metric.startTime;
+      object.on(metric.eventStop, function (id) {
+        id = id || '';
+        var elapsed = new Date().getTime() - metric.events[id].startTime;
         self.send(metric.type, metric.name, elapsed);
       });
     }

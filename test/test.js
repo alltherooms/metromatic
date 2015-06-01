@@ -48,6 +48,29 @@ describe('Metromatic', function () {
 
       clock.restore();
     });
+
+    it('reports non-overlapping timed metrics', function () {
+      var metromatic = createMetromatic(object, [{
+        name: 'time_foo_bar',
+        type: 'timing',
+        eventStart: 'foo',
+        eventStop: 'bar'
+      }]);
+      var clock = sinon.useFakeTimers();
+      var timing = sinon.spy(metromatic.statsd, 'timing');
+
+      object.emit('foo', 'first-metric');
+      clock.tick(500);
+      object.emit('foo', 'second-metric');
+      clock.tick(100);
+      object.emit('bar', 'second-metric');
+      clock.tick(100);
+      object.emit('bar', 'first-metric');
+
+      expect(timing).to.have.been.calledTwice;
+      expect(timing).to.have.been.calledWithExactly('time_foo_bar', 100);
+      expect(timing).to.have.been.calledWithExactly('time_foo_bar', 700);
+    });
   });
 
   describe('wrapping and restore', function () {
