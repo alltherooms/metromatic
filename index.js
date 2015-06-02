@@ -25,9 +25,13 @@ Metromatic.instrument = function (object, options) {
 
       object.on(metric.eventStop, function (id) {
         id = id || '';
-        var elapsed = new Date().getTime() - metric.events[id].startTime;
-        delete metric.events[id];
-        self.send(metric.type, metric.name, elapsed);
+        var startTime;
+        var elapsed;
+        if (metric.events[id]) {
+          elapsed = new Date().getTime() - metric.events[id].startTime;
+          delete metric.events[id];
+          self.send(metric.type, metric.name, elapsed);
+        }
       });
     }
   });
