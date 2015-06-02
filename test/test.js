@@ -77,6 +77,27 @@ describe('Metromatic', function () {
       expect(timing).to.have.been.calledWithExactly('time_foo_bar', 100);
       expect(timing).to.have.been.calledWithExactly('time_foo_bar', 700);
     });
+
+    it('keeps no track of temporal data to measure', function () {
+      createMetromatic(object, [{
+        name: 'time_foo_bar',
+        type: 'timing',
+        eventStart: 'foo',
+        eventStop: 'bar'
+      }]);
+      clock = sinon.useFakeTimers();
+      timing = sinon.spy(Metromatic.statsd, 'timing');
+
+      object.emit('foo', 'first-metric');
+      clock.tick(500);
+      object.emit('foo', 'second-metric');
+      object.emit('bar', 'second-metric');
+      object.emit('bar', 'first-metric');
+
+      object._metrics.forEach(function (metric) {
+        expect(metric.events).to.be.empty;
+      });
+    });
   });
 
   describe('wrapping and restore', function () {
@@ -90,6 +111,7 @@ describe('Metromatic', function () {
 
       expect(object.listeners('foo')).have.length(1);
       expect(object.listeners('bar')).have.length(1);
+      expect(object._metrics).to.not.be.empty;
     });
 
     it('stops listening events on the object', function () {
@@ -104,6 +126,7 @@ describe('Metromatic', function () {
 
       expect(object.listeners('foo')).have.length(0);
       expect(object.listeners('bar')).have.length(0);
+      expect(object._metrics).to.not.exist;
     });
   });
 });

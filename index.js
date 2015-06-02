@@ -26,13 +26,14 @@ Metromatic.instrument = function (object, options) {
       object.on(metric.eventStop, function (id) {
         id = id || '';
         var elapsed = new Date().getTime() - metric.events[id].startTime;
+        delete metric.events[id];
         self.send(metric.type, metric.name, elapsed);
       });
     }
   });
 
   this.statsd = new lynx(statsd.host, statsd.port);
-  object.metrics = metrics;
+  object._metrics = metrics;
 };
 
 /*
@@ -52,14 +53,14 @@ Metromatic.send = function (type, name, data) {
 * removing all attached values and event listeners from the object.
 */
 Metromatic.restore = function (object) {
-  object.metrics.forEach(function (metric) {
+  object._metrics.forEach(function (metric) {
     if (metric.type === 'timing') {
       object.removeAllListeners(metric.eventStart);
       object.removeAllListeners(metric.eventStop);
     }
   });
 
-  delete object.metrics;
+  delete object._metrics;
 };
 
 module.exports = Metromatic;
