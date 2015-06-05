@@ -34,6 +34,13 @@ Metromatic.instrument = function (object, options) {
         }
       });
     }
+
+    if (metric.type === 'gauge') {
+      metric.events = metric.events || {};
+      object.on(metric.eventGauge, function (data) {
+        self.send(metric.type, metric.name, data || {});
+      });
+    }
   });
 
   this.statsd = new lynx(statsd.host, statsd.port);
@@ -61,6 +68,10 @@ Metromatic.restore = function (object) {
     if (metric.type === 'timing') {
       object.removeAllListeners(metric.eventStart);
       object.removeAllListeners(metric.eventStop);
+    }
+
+    if (metric.type === 'gauge') {
+      object.removeAllListeners(metric.eventGauge);
     }
   });
 

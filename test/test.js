@@ -5,7 +5,7 @@ var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
 var sinonChai = require('sinon-chai');
-var EventEmitter = require("events").EventEmitter;
+var EventEmitter = require('events').EventEmitter;
 
 chai.use(sinonChai);
 
@@ -100,6 +100,33 @@ describe('Metromatic', function () {
     });
   });
 
+  describe('gauged metrics', function () {
+    var gauge;
+
+    beforeEach(function () {
+      if (gauge) gauge.restore();
+    });
+
+    it('reports a gauged metric on each gauge event', function () {
+      createMetromatic(object, [{
+        name: 'gauge_foo',
+        type: 'gauge',
+        eventGauge: 'hey'
+      }]);
+
+      var data = {
+        foo: 'bar',
+        sample: 100
+      };
+
+      gauge = sinon.spy(Metromatic.statsd, 'gauge');
+
+      object.emit('hey', data);
+      expect(gauge).to.have.been.calledOnce;
+      expect(gauge).to.have.been.calledWithExactly('gauge_foo', data);
+    });
+  });
+
   describe('wrapping and restore', function () {
     it('listens to specified events', function () {
       createMetromatic(object, [{
@@ -107,10 +134,15 @@ describe('Metromatic', function () {
         type: 'timing',
         eventStart: 'foo',
         eventStop: 'bar'
+      }, {
+        name: 'gauge_foo',
+        type: 'gauge',
+        eventGauge: 'hey'
       }]);
 
       expect(object.listeners('foo')).have.length(1);
       expect(object.listeners('bar')).have.length(1);
+      expect(object.listeners('hey')).have.length(1);
       expect(object._metrics).to.not.be.empty;
     });
 
@@ -120,12 +152,17 @@ describe('Metromatic', function () {
         type: 'timing',
         eventStart: 'foo',
         eventStop: 'bar'
+      }, {
+        name: 'gauge_foo',
+        type: 'gauge',
+        eventGauge: 'hey'
       }]);
 
       Metromatic.restore(object);
 
       expect(object.listeners('foo')).have.length(0);
       expect(object.listeners('bar')).have.length(0);
+      expect(object.listeners('hey')).have.length(0);
       expect(object._metrics).to.not.exist;
     });
   });
