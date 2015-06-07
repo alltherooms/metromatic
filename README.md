@@ -1,4 +1,4 @@
-# metromatic
+# metromatic ![Build status](https://travis-ci.org/alltherooms/metromatic.svg?branch=master)
 
 Report [StatsD](https://github.com/etsy/statsd) metrics based on events shouted by a given object
 
