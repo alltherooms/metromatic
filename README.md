@@ -24,11 +24,15 @@ Metromatic.instrument(myAPIClient, {
     type: 'timing', // as per lynx methods
     eventStart: 'request',
     eventStop: 'response'
+  }, {
+    name: 'gauge_foo',
+    type: 'gauge',
+    eventGauge: 'hey'
   }]
 });
 ```
 
-Eventually, a timing StatsD metric will be send when `myAPIClient` emits the `request` and `response` events.
+Eventually, timings and gauges StatsD metrics will be sent when `myAPIClient` emits the `request` and `response` events (for timing) or `hey` event (for gauge).
 
 If you just want to stop listening the object:
 
@@ -48,7 +52,7 @@ npm test
 
 ## Contributing
 
-At the moment the `timing` metric type is the only one supported. You're more than welcome to express some code love in a Pull Request to make it even more awesome.
+At the moment supports `timing` and `gauges` metric types. You're more than welcome to express some code love in a Pull Request to make it even more awesome.
 
 Also, if you feel like something is quite not right or want to suggest something, leave us an open issue.
 

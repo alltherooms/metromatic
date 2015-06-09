@@ -14,8 +14,9 @@ Metromatic.instrument = function (object, options) {
   }
 
   metrics.forEach(function (metric) {
+    metric.events = metric.events || {};
+
     if (metric.type === 'timing') {
-      metric.events = metric.events || {};
       object.on(metric.eventStart, function (id) {
         id = id || '';
         metric.events[id] = {
@@ -32,6 +33,12 @@ Metromatic.instrument = function (object, options) {
           delete metric.events[id];
           self.send(metric.type, metric.name, elapsed);
         }
+      });
+    }
+
+    if (metric.type === 'gauge') {
+      object.on(metric.eventGauge, function (data) {
+        self.send(metric.type, metric.name, data || {});
       });
     }
   });
@@ -61,6 +68,10 @@ Metromatic.restore = function (object) {
     if (metric.type === 'timing') {
       object.removeAllListeners(metric.eventStart);
       object.removeAllListeners(metric.eventStop);
+    }
+
+    if (metric.type === 'gauge') {
+      object.removeAllListeners(metric.eventGauge);
     }
   });
 
