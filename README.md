@@ -52,7 +52,7 @@ npm test
 
 ## Contributing
 
-At the moment the `timing` metric type is the only one supported. You're more than welcome to express some code love in a Pull Request to make it even more awesome.
+At the moment supports `timing` and `gauges` metric types. You're more than welcome to express some code love in a Pull Request to make it even more awesome.
 
 Also, if you feel like something is quite not right or want to suggest something, leave us an open issue.
 
