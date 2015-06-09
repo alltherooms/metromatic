@@ -14,8 +14,9 @@ Metromatic.instrument = function (object, options) {
   }
 
   metrics.forEach(function (metric) {
+    metric.events = metric.events || {};
+
     if (metric.type === 'timing') {
-      metric.events = metric.events || {};
       object.on(metric.eventStart, function (id) {
         id = id || '';
         metric.events[id] = {
@@ -36,7 +37,6 @@ Metromatic.instrument = function (object, options) {
     }
 
     if (metric.type === 'gauge') {
-      metric.events = metric.events || {};
       object.on(metric.eventGauge, function (data) {
         self.send(metric.type, metric.name, data || {});
       });
