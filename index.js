@@ -1,81 +1,70 @@
-'use strict';
+const EventEmitter = require('events');
+const backendFactories = require('./backends');
+const metricFactories = require('./metrics');
 
-var lynx = require('lynx');
+const instrumented = new WeakMap();
 
-function Metromatic () {}
+function Metromatic() {}
 
-Metromatic.instrument = function (object, options) {
-  var self = this;
-  var statsd = options.statsd;
-  var metrics = options.metrics || [];
+Metromatic.instrument = function instrument(ee, options) {
+  const self = this;
+  const { backends = [], statsd, metrics = [] } = options;
 
-  if (!statsd || !statsd.host || !statsd.port) {
-    throw new Error('A StatsD host and port are required');
+  if (!(ee instanceof EventEmitter)) {
+    throw new Error('Instrumented objects must be instances of EventEmitter');
   }
 
-  metrics.forEach(function (metric) {
-    metric.events = metric.events || {};
+  if (instrumented.has(ee)) {
+    throw new Error('EventEmitter already instrumented');
+  }
 
-    if (metric.type === 'timing') {
-      object.on(metric.eventStart, function (id) {
-        id = id || '';
-        metric.events[id] = {
-          startTime: new Date().getTime()
-        };
-      });
-
-      object.on(metric.eventStop, function (id) {
-        id = id || '';
-        var startTime;
-        var elapsed;
-        if (metric.events[id]) {
-          elapsed = new Date().getTime() - metric.events[id].startTime;
-          delete metric.events[id];
-          self.send(metric.type, metric.name, elapsed);
-        }
-      });
+  self.backends = backends.map((config) => {
+    if (!backendFactories[config.type]) {
+      throw new Error(`Invalid or missing backend type, supported types ${Object.keys(backendFactories).join()}`);
     }
-
-    if (metric.type === 'gauge') {
-      object.on(metric.eventGauge, function (data) {
-        self.send(metric.type, metric.name, data || {});
-      });
-    }
+    return backendFactories[config.type](config);
   });
 
-  this.statsd = new lynx(statsd.host, statsd.port);
-  object._metrics = metrics;
+  // backward compatibility
+  if (statsd) {
+    self.backends.push(backendFactories.statsd(statsd));
+  }
+
+  if (!self.backends.length) {
+    throw new Error('No backends could be configured, ensure all required config values are specified');
+  }
+
+  const boundSend = self.send.bind(self);
+  const installedMetrics = metrics.map((metric) => {
+    if (!metricFactories[metric.type]) throw new Error(`Unsupported metric type '${metric.type}'`);
+    metricFactories[metric.type].install(ee, metric, boundSend);
+    return Object.assign({}, metric);
+  });
+
+  instrumented.set(ee, installedMetrics);
 };
 
 /*
-* Send a metric to StatsD
+* Send a metric
 *
-* @param {string} type - The StatsD metric type to send
+* @param {string} type - The metric type to send
 * @param {string} name - The metric name
 * @param {*} data - Whatever payload data the metric requires
 */
-Metromatic.send = function (type, name, data) {
-  var args = [name].concat(data);
-  this.statsd[type].apply(this.statsd, args);
+Metromatic.send = function send(type, name, data) {
+  const args = [type, name].concat(data);
+  this.backends.forEach(be => be.send(...args));
 };
 
 /*
 * Restores the object back to its original form by
 * removing all attached values and event listeners from the object.
 */
-Metromatic.restore = function (object) {
-  object._metrics.forEach(function (metric) {
-    if (metric.type === 'timing') {
-      object.removeAllListeners(metric.eventStart);
-      object.removeAllListeners(metric.eventStop);
-    }
-
-    if (metric.type === 'gauge') {
-      object.removeAllListeners(metric.eventGauge);
-    }
-  });
-
-  delete object._metrics;
+Metromatic.restore = function restore(ee) {
+  if (!instrumented.has(ee)) return;
+  instrumented.get(ee)
+    .forEach(installedMetric => metricFactories[installedMetric.type].uninstall(ee, installedMetric));
+  instrumented.delete(ee);
 };
 
 module.exports = Metromatic;
